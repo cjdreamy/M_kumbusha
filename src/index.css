@@ -1,0 +1,125 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    /* Base colors - warm, accessible healthcare theme */
+    --background: 0 0% 100%;
+    --foreground: 210 15% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 15% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 15% 15%;
+    
+    /* Primary: Teal/Turquoise - trust, healthcare, calm */
+    --primary: 186 65% 42%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary: Warm coral - care, warmth, energy */
+    --secondary: 22 85% 62%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent: Soft purple - medical, professional */
+    --accent: 270 45% 92%;
+    --accent-foreground: 270 50% 25%;
+    
+    /* Muted colors for backgrounds */
+    --muted: 210 20% 96%;
+    --muted-foreground: 210 12% 45%;
+    
+    /* Destructive - high contrast red */
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 186 65% 42%;
+    
+    /* Chart colors - healthcare themed */
+    --chart-1: 186 65% 42%;
+    --chart-2: 22 85% 62%;
+    --chart-3: 270 50% 55%;
+    --chart-4: 145 60% 45%;
+    --chart-5: 45 90% 55%;
+    
+    /* Sidebar - professional teal theme */
+    --sidebar-background: 186 25% 97%;
+    --sidebar-foreground: 210 15% 20%;
+    --sidebar-primary: 186 65% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 186 35% 90%;
+    --sidebar-accent-foreground: 186 65% 25%;
+    --sidebar-border: 186 20% 85%;
+    --sidebar-ring: 186 65% 42%;
+  }
+
+  .dark {
+    /* Dark mode - maintaining warmth and accessibility */
+    --background: 210 20% 12%;
+    --foreground: 210 15% 95%;
+    --card: 210 18% 16%;
+    --card-foreground: 210 15% 95%;
+    --popover: 210 18% 16%;
+    --popover-foreground: 210 15% 95%;
+    
+    /* Primary: Lighter teal for dark mode */
+    --primary: 186 60% 55%;
+    --primary-foreground: 210 20% 12%;
+    
+    /* Secondary: Softer coral for dark mode */
+    --secondary: 22 75% 58%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent: Deeper purple for dark mode */
+    --accent: 270 30% 20%;
+    --accent-foreground: 270 45% 85%;
+    
+    /* Muted colors */
+    --muted: 210 18% 22%;
+    --muted-foreground: 210 12% 65%;
+    
+    /* Destructive */
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 210 18% 25%;
+    --input: 210 18% 25%;
+    --ring: 186 60% 55%;
+    
+    /* Chart colors - adjusted for dark mode */
+    --chart-1: 186 60% 55%;
+    --chart-2: 22 75% 58%;
+    --chart-3: 270 55% 65%;
+    --chart-4: 145 55% 50%;
+    --chart-5: 45 85% 60%;
+    
+    /* Sidebar - dark teal theme */
+    --sidebar-background: 210 20% 10%;
+    --sidebar-foreground: 210 15% 90%;
+    --sidebar-primary: 186 60% 55%;
+    --sidebar-primary-foreground: 210 20% 10%;
+    --sidebar-accent: 210 18% 18%;
+    --sidebar-accent-foreground: 186 60% 75%;
+    --sidebar-border: 210 18% 20%;
+    --sidebar-ring: 186 60% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

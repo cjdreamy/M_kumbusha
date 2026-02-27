@@ -1,0 +1,289 @@
+import { useEffect, useState } from 'react';
+import { DashboardLayout } from '@/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { getAllSchedules, toggleScheduleActive } from '@/db/api';
+import { supabase } from '@/db/supabase';
+import type { ScheduleWithElderly } from '@/types/database';
+import { Calendar, Clock, Phone, MessageSquare, Globe, Plus, Send } from 'lucide-react';
+import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+
+export default function SchedulesPage() {
+  const [schedules, setSchedules] = useState<ScheduleWithElderly[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadSchedules();
+  }, []);
+
+  const loadSchedules = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllSchedules();
+      setSchedules(data);
+    } catch (error) {
+      console.error('Failed to load schedules:', error);
+      toast.error('Failed to load schedules');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      await toggleScheduleActive(id, !currentStatus);
+      setSchedules(schedules.map(s => 
+        s.id === id ? { ...s, is_active: !currentStatus } : s
+      ));
+      toast.success(`Schedule ${!currentStatus ? 'activated' : 'deactivated'}`);
+    } catch (error) {
+      console.error('Failed to toggle schedule:', error);
+      toast.error('Failed to update schedule');
+    }
+  };
+
+  const handleSendNow = async (schedule: ScheduleWithElderly) => {
+    if (!schedule.elderly) {
+      toast.error('Elderly person not found');
+      return;
+    }
+
+    setSendingReminder(schedule.id);
+    try {
+      // Get caregiver ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('User not authenticated');
+        return;
+      }
+
+      // Construct message
+      const message = schedule.language === 'kiswahili'
+        ? `Kumbusho: ${schedule.title}. ${schedule.description || ''}`
+        : `Reminder: ${schedule.title}. ${schedule.description || ''}`;
+
+      // Send reminder
+      const { data, error } = await supabase.functions.invoke('send-reminder', {
+        body: {
+          scheduleId: schedule.id,
+          elderlyId: schedule.elderly_id,
+          caregiverId: user.id,
+          message: message,
+          channel: schedule.channel,
+          language: schedule.language,
+        },
+      });
+
+      if (error) {
+        const errorMsg = await error?.context?.text();
+        console.error('Send reminder error:', errorMsg || error?.message);
+        toast.error('Failed to send reminder');
+      } else {
+        toast.success('Reminder sent successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to send reminder:', error);
+      toast.error('Failed to send reminder');
+    } finally {
+      setSendingReminder(null);
+    }
+  };
+
+  const getChannelIcon = (channel: string) => {
+    switch (channel) {
+      case 'sms':
+        return <MessageSquare className="h-4 w-4" />;
+      case 'voice':
+        return <Phone className="h-4 w-4" />;
+      case 'both':
+        return <Globe className="h-4 w-4" />;
+      default:
+        return <MessageSquare className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'medication':
+        return 'bg-primary/10 text-primary';
+      case 'exercise':
+        return 'bg-secondary/10 text-secondary';
+      case 'appointment':
+        return 'bg-chart-3/10 text-chart-3';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Reminder Schedules</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage reminder schedules for elderly care
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/schedules/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Schedule
+            </Link>
+          </Button>
+        </div>
+
+        {/* Schedules List */}
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48 mb-2 bg-muted" />
+                  <Skeleton className="h-4 w-32 bg-muted" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full bg-muted" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : schedules.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Calendar className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No schedules yet</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
+                Create your first reminder schedule to start sending automated reminders.
+              </p>
+              <Button asChild>
+                <Link to="/schedules/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create First Schedule
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {schedules.map((schedule) => (
+              <Card key={schedule.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <CardTitle>{schedule.title}</CardTitle>
+                        <Badge className={getTypeColor(schedule.schedule_type)}>
+                          {schedule.schedule_type}
+                        </Badge>
+                        {schedule.is_active ? (
+                          <Badge variant="default">Active</Badge>
+                        ) : (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                      </div>
+                      <CardDescription>
+                        {schedule.elderly?.full_name}
+                      </CardDescription>
+                    </div>
+                    <Switch
+                      checked={schedule.is_active}
+                      onCheckedChange={() => handleToggleActive(schedule.id, schedule.is_active)}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {schedule.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {schedule.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span>{schedule.time_of_day}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="capitalize">{schedule.frequency}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {getChannelIcon(schedule.channel)}
+                      <span className="capitalize">{schedule.channel}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <span className="capitalize">{schedule.language}</span>
+                    </div>
+                  </div>
+
+                  {schedule.days_of_week && schedule.days_of_week.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                        <Badge
+                          key={idx}
+                          variant={schedule.days_of_week?.includes(idx) ? 'default' : 'outline'}
+                          className="text-xs"
+                        >
+                          {day}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Send Now Button */}
+                  <div className="pt-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={sendingReminder === schedule.id}
+                        >
+                          <Send className="mr-2 h-3 w-3" />
+                          {sendingReminder === schedule.id ? 'Sending...' : 'Send Now'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Send Reminder Now?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will immediately send a {schedule.channel} reminder to {schedule.elderly?.full_name} for: "{schedule.title}"
+                            {schedule.elderly?.secondary_contact && (
+                              <span className="block mt-2 text-sm">
+                                If not confirmed, an alert will be sent to the secondary contact.
+                              </span>
+                            )}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleSendNow(schedule)}>
+                            Send Reminder
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
