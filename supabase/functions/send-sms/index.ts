@@ -34,8 +34,13 @@ serve(async (req) => {
       );
     }
 
+    const isSandbox = AFRICASTALKING_USERNAME === 'sandbox';
+    const smsEndpoint = isSandbox
+      ? 'https://api.sandbox.africastalking.com/version1/messaging'
+      : 'https://api.africastalking.com/version1/messaging';
+
     // Send SMS via Africa's Talking
-    const smsResponse = await fetch('https://api.africastalking.com/version1/messaging', {
+    const smsResponse = await fetch(smsEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -58,8 +63,8 @@ serve(async (req) => {
 
     // Determine status based on response
     const status = smsData.SMSMessageData?.Recipients?.[0]?.status === 'Success' ? 'sent' : 'failed';
-    const errorMessage = smsData.SMSMessageData?.Recipients?.[0]?.status !== 'Success' 
-      ? smsData.SMSMessageData?.Recipients?.[0]?.status 
+    const errorMessage = smsData.SMSMessageData?.Recipients?.[0]?.status !== 'Success'
+      ? smsData.SMSMessageData?.Recipients?.[0]?.status
       : null;
 
     // Log the SMS attempt
@@ -83,14 +88,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: status === 'sent',
         status: status,
         data: smsData,
       }),
-      { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } 
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       }
     );
 

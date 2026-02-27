@@ -1,3 +1,7 @@
+# Welcome to Your Miaoda Project
+Miaoda Application Link URL
+    URL:https://medo.dev/projects/app-9x1ihajudzpd
+
 # AmaniCare - Healthcare Reminder & Caregiver Support Platform
 
 A comprehensive multi-channel healthcare reminder and caregiver support platform designed for elderly care in rural Africa. Supports both feature phone users (via SMS and voice calls) and smartphone users (via web dashboard).

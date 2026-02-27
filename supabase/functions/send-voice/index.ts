@@ -35,8 +35,15 @@ serve(async (req) => {
       );
     }
 
-    // Make voice call via Africa's Talking
-    const voiceResponse = await fetch('https://api.africastalking.com/version1/call', {
+    const isSandbox = AFRICASTALKING_USERNAME === 'sandbox';
+    const fromNumber = Deno.env.get('AFRICASTALKING_FROM_NUMBER') || '';
+    const voiceEndpoint = isSandbox
+      ? 'https://voice.sandbox.africastalking.com/call'
+      : 'https://api.africastalking.com/version1/call';
+
+    console.log(`Attempting voice call from ${fromNumber} to ${to} using ${voiceEndpoint}`);
+
+    const voiceResponse = await fetch(voiceEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -46,7 +53,7 @@ serve(async (req) => {
       body: new URLSearchParams({
         username: AFRICASTALKING_USERNAME,
         to: to,
-        from: '', // Your Africa's Talking phone number
+        from: fromNumber,
       }),
     });
 
@@ -59,7 +66,7 @@ serve(async (req) => {
 
     // Determine status based on response
     const status = voiceData.entries?.[0]?.status === 'Queued' ? 'sent' : 'failed';
-    const errorMessage = voiceData.entries?.[0]?.status !== 'Queued' 
+    const errorMessage = voiceData.entries?.[0]?.status !== 'Queued'
       ? voiceData.errorMessage || 'Call failed'
       : null;
 
@@ -84,14 +91,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: status === 'sent',
         status: status,
         data: voiceData,
       }),
-      { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } 
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       }
     );
 
