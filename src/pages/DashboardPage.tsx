@@ -4,7 +4,9 @@ import { DashboardLayout } from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getDashboardStats } from '@/db/api';
+import { generateCareInsights } from '@/lib/gemini';
+import ReactMarkdown from 'react-markdown';
+import { getDashboardStats, getAdherenceStats } from '@/db/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { DashboardStats } from '@/types/database';
 import {
@@ -17,13 +19,25 @@ import {
   Plus,
   TrendingUp,
   Sparkles,
-  Loader2
+  Loader2,
+  BarChart3
 } from 'lucide-react';
-import { generateCareInsights } from '@/lib/gemini';
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
 
 export default function DashboardPage() {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [adherenceData, setAdherenceData] = useState<{ date: string; confirmed: number; missed: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -36,8 +50,12 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       const caregiverId = profile?.role === 'admin' ? undefined : profile?.id;
-      const data = await getDashboardStats(caregiverId);
-      setStats(data);
+      const [statsData, chartData] = await Promise.all([
+        getDashboardStats(caregiverId),
+        getAdherenceStats(caregiverId)
+      ]);
+      setStats(statsData);
+      setAdherenceData(chartData);
     } catch (error) {
       console.error('Failed to load dashboard stats:', error);
     } finally {
@@ -49,13 +67,18 @@ export default function DashboardPage() {
     if (!stats) return;
     try {
       setAiLoading(true);
+      const adherenceHistory = adherenceData.map(d => `${d.date}: ${d.confirmed} confirmed, ${d.missed} missed`).join('\n');
+
       const context = `Current Stats:
 - Total Elderly: ${stats.total_elderly}
 - Active Schedules: ${stats.active_schedules}
 - Pending Reminders: ${stats.pending_reminders}
 - Missed Today: ${stats.missed_reminders_today}
 - Confirmed Today: ${stats.confirmed_reminders_today}
-- Sent Today: ${stats.reminders_sent_today}`;
+- Sent Today: ${stats.reminders_sent_today}
+
+Last 7 Days Adherence History:
+${adherenceHistory} `;
 
       const insight = await generateCareInsights(context);
       setAiInsight(insight);
@@ -160,8 +183,8 @@ export default function DashboardPage() {
                   <CardTitle className="text-sm font-medium">
                     {stat.title}
                   </CardTitle>
-                  <div className={`h-8 w-8 rounded-full ${stat.bgColor} flex items-center justify-center`}>
-                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  <div className={`h - 8 w - 8 rounded - full ${stat.bgColor} flex items - center justify - center`}>
+                    <stat.icon className={`h - 4 w - 4 ${stat.color} `} />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -174,6 +197,68 @@ export default function DashboardPage() {
             ))
           )}
         </div>
+
+        {/* Adherence Chart */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Care Adherence Trends
+              </CardTitle>
+              <CardDescription>
+                Overview of reminder confirmations vs missed events over the last 7 days
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              {loading ? (
+                <Skeleton className="h-full w-full bg-muted" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={adherenceData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'hsl(var(--accent))', opacity: 0.4 }}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        borderColor: 'hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                    <Bar
+                      name="Confirmed"
+                      dataKey="confirmed"
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                      barSize={30}
+                    />
+                    <Bar
+                      name="Missed"
+                      dataKey="missed"
+                      fill="hsl(var(--destructive))"
+                      radius={[4, 4, 0, 0]}
+                      barSize={30}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* AI Insight Card */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -205,9 +290,7 @@ export default function DashboardPage() {
           <CardContent>
             {aiInsight ? (
               <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
-                {aiInsight.split('\n').map((line, i) => (
-                  <p key={i} className="mb-2 last:mb-0">{line}</p>
-                ))}
+                <ReactMarkdown>{aiInsight}</ReactMarkdown>
               </div>
             ) : (
               <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">

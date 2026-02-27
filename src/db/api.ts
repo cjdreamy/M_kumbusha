@@ -350,3 +350,46 @@ export async function getDashboardStats(caregiverId?: string): Promise<Dashboard
     confirmed_reminders_today: confirmedToday,
   };
 }
+
+export async function getAdherenceStats(caregiverId?: string): Promise<{ date: string; confirmed: number; missed: number }[]> {
+  const stats: { [key: string]: { confirmed: number; missed: number } } = {};
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }).reverse();
+
+  // Initialize stats for each day
+  last7Days.forEach(date => {
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    stats[dateStr] = { confirmed: 0, missed: 0 };
+  });
+
+  const startDate = last7Days[0].toISOString();
+
+  let query = supabase
+    .from('reminder_logs')
+    .select('status, created_at')
+    .gte('created_at', startDate);
+
+  if (caregiverId) {
+    query = query.eq('caregiver_id', caregiverId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  data.forEach(log => {
+    const dateStr = new Date(log.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (stats[dateStr]) {
+      if (log.status === 'confirmed') stats[dateStr].confirmed++;
+      if (log.status === 'missed') stats[dateStr].missed++;
+    }
+  });
+
+  return Object.entries(stats).map(([date, counts]) => ({
+    date,
+    ...counts
+  }));
+}
