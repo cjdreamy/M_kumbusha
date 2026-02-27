@@ -11,6 +11,7 @@
     "lint": "tsgo -p tsconfig.check.json; npx biome lint; .rules/check.sh;npx tailwindcss -i ./src/index.css -o /dev/null 2>&1 | grep -E '^(CssSyntaxError|Error):.*' || true;.rules/testBuild.sh"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -89,7 +90,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.11",
     "typescript": "~5.9.3",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "^7.3.1",
     "vite-plugin-svgr": "^4.5.0"
   }
 }

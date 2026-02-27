@@ -15,13 +15,18 @@ import {
   CheckCircle2,
   XCircle,
   Plus,
-  TrendingUp
+  TrendingUp,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
+import { generateCareInsights } from '@/lib/gemini';
 
 export default function DashboardPage() {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -37,6 +42,27 @@ export default function DashboardPage() {
       console.error('Failed to load dashboard stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getAiInsight = async () => {
+    if (!stats) return;
+    try {
+      setAiLoading(true);
+      const context = `Current Stats:
+- Total Elderly: ${stats.total_elderly}
+- Active Schedules: ${stats.active_schedules}
+- Pending Reminders: ${stats.pending_reminders}
+- Missed Today: ${stats.missed_reminders_today}
+- Confirmed Today: ${stats.confirmed_reminders_today}
+- Sent Today: ${stats.reminders_sent_today}`;
+
+      const insight = await generateCareInsights(context);
+      setAiInsight(insight);
+    } catch (error) {
+      console.error('Failed to generate AI insight:', error);
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -148,6 +174,49 @@ export default function DashboardPage() {
             ))
           )}
         </div>
+
+        {/* AI Insight Card */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Smart Care Insights
+              </CardTitle>
+              <CardDescription>
+                AI-generated suggestions based on your data trends
+              </CardDescription>
+            </div>
+            <Button
+              onClick={getAiInsight}
+              disabled={aiLoading || !stats}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              {aiLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {aiInsight ? 'Refresh Insights' : 'Generate Insights'}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {aiInsight ? (
+              <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                {aiInsight.split('\n').map((line, i) => (
+                  <p key={i} className="mb-2 last:mb-0">{line}</p>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">
+                <AlertCircle className="h-4 w-4" />
+                Click the button above to analyze your current statistics and get caregiver advice.
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <div className="grid gap-4 md:grid-cols-2">
