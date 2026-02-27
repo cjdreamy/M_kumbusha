@@ -3,6 +3,24 @@
 ## Overview
 AmaniCare now includes comprehensive reminder scheduling, manual sending, and confirmation tracking with automatic escalation to secondary contacts.
 
+---
+
+## ⚠️ IMPORTANT: Setup Required
+
+**Before you can send SMS or voice reminders, you MUST configure Africa's Talking API credentials.**
+
+### Quick Setup (5 minutes):
+1. **Sign up** at [africastalking.com](https://africastalking.com/) (free sandbox available)
+2. **Get credentials** from dashboard: API Key + Username
+3. **Configure in Supabase**: Add `AFRICASTALKING_API_KEY` and `AFRICASTALKING_USERNAME` secrets
+4. **For sandbox**: Register test phone numbers in Africa's Talking dashboard
+5. **Test**: Use "Send Now" button on any schedule
+
+📖 **Detailed instructions:** See [SMS_SETUP_GUIDE.md](./SMS_SETUP_GUIDE.md)  
+🔧 **Troubleshooting:** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
+---
+
 ## Key Features
 
 ### 1. Create Reminder Schedules
