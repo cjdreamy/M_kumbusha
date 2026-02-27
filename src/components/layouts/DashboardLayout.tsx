@@ -3,13 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { 
-  Heart, 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  FileText, 
-  User, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  FileText,
+  User,
   Settings,
   Menu,
   LogOut,
@@ -84,10 +83,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Logo */}
           <div className="flex h-16 items-center border-b px-6">
             <Link to="/" className="flex items-center gap-2 font-semibold">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Heart className="h-5 w-5 text-primary" />
-              </div>
-              <span className="text-lg">AmaniCare</span>
+              <img src="/images/favicon.ico" alt="M-Kumbusha Logo" className="h-8 w-8 rounded-lg" />
+              <span className="text-lg">M-Kumbusha</span>
             </Link>
           </div>
 
@@ -134,10 +131,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 {/* Logo */}
                 <div className="flex h-16 items-center border-b px-6">
                   <Link to="/" className="flex items-center gap-2 font-semibold">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Heart className="h-5 w-5 text-primary" />
-                    </div>
-                    <span className="text-lg">AmaniCare</span>
+                    <img src="/images/favicon.ico" alt="M-Kumbusha Logo" className="h-8 w-8 rounded-lg" />
+                    <span className="text-lg">M-Kumbusha</span>
                   </Link>
                 </div>
 
@@ -171,10 +166,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </Sheet>
 
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Heart className="h-5 w-5 text-primary" />
-            </div>
-            <span className="font-semibold">AmaniCare</span>
+            <img src="/images/favicon.ico" alt="M-Kumbusha Logo" className="h-8 w-8 rounded-lg" />
+            <span className="font-semibold">M-Kumbusha</span>
           </div>
         </header>
 

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Heart, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -85,11 +85,9 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Heart className="h-8 w-8 text-primary" />
-            </div>
+            <img src="/images/favicon.ico" alt="M-Kumbusha Logo" className="h-20 w-20 rounded-xl" />
           </div>
-          <CardTitle className="text-2xl font-bold">Join AmaniCare</CardTitle>
+          <CardTitle className="text-2xl font-bold">Join M-Kumbusha</CardTitle>
           <CardDescription>
             Create an account to start managing healthcare reminders
           </CardDescription>

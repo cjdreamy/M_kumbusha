@@ -7,12 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getDashboardStats } from '@/db/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { DashboardStats } from '@/types/database';
-import { 
-  Users, 
-  Calendar, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle2, 
+import {
+  Users,
+  Calendar,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
   XCircle,
   Plus,
   TrendingUp
@@ -179,12 +179,11 @@ export default function DashboardPage() {
               </Button>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>System Information</CardTitle>
               <CardDescription>
-                About AmaniCare platform
+                About M-Kumbusha platform
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -225,6 +224,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
