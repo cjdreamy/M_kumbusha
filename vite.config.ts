@@ -5,10 +5,10 @@ import svgr from "vite-plugin-svgr";
 import path from "path";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
-    miaodaDevPlugin(),
+    command === 'serve' ? miaodaDevPlugin() : [],
     svgr({
       svgrOptions: {
         icon: true,
@@ -22,4 +22,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
