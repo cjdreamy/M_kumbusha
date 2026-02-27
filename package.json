@@ -3,8 +3,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "echo 'Do not use this command, only use lint to check'",
-    "build": "echo 'Do not use this command, only use lint to check'",
+    "dev": "vite",
+    "start": "serve -s dist",
+    "build": "vite build",
+    "type-check": "tsc -p tsconfig.app.json --noEmit",
+    "preview": "vite preview",
     "lint": "tsgo -p tsconfig.check.json; npx biome lint; .rules/check.sh;npx tailwindcss -i ./src/index.css -o /dev/null 2>&1 | grep -E '^(CssSyntaxError|Error):.*' || true;.rules/testBuild.sh"
   },
   "dependencies": {
@@ -63,6 +66,7 @@
     "react-router": "^7.9.5",
     "react-router-dom": "^7.9.5",
     "recharts": "2.15.4",
+    "serve": "^14.2.5",
     "sonner": "^2.0.7",
     "streamdown": "^1.4.0",
     "tailwind-merge": "^3.3.1",

@@ -6,21 +6,56 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { getAllSchedules, toggleScheduleActive } from '@/db/api';
+import { getAllSchedules, toggleScheduleActive, getReminderLogs } from '@/db/api';
 import { supabase } from '@/db/supabase';
-import type { ScheduleWithElderly } from '@/types/database';
+import type { ScheduleWithElderly, ReminderLogWithDetails } from '@/types/database';
 import { Calendar, Clock, Phone, MessageSquare, Globe, Plus, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<ScheduleWithElderly[]>([]);
+  const [logs, setLogs] = useState<ReminderLogWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingLogs, setLoadingLogs] = useState(true);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
   useEffect(() => {
     loadSchedules();
+    loadLogs();
+
+    // Subscribe to realtime logs
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reminder_logs'
+        },
+        () => {
+          loadLogs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const loadLogs = async () => {
+    try {
+      setLoadingLogs(true);
+      const data = await getReminderLogs(5);
+      setLogs(data);
+    } catch (error) {
+      console.error('Failed to load logs:', error);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
 
   const loadSchedules = async () => {
     try {
@@ -38,7 +73,7 @@ export default function SchedulesPage() {
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       await toggleScheduleActive(id, !currentStatus);
-      setSchedules(schedules.map(s => 
+      setSchedules(schedules.map(s =>
         s.id === id ? { ...s, is_active: !currentStatus } : s
       ));
       toast.success(`Schedule ${!currentStatus ? 'activated' : 'deactivated'}`);
@@ -83,7 +118,7 @@ export default function SchedulesPage() {
       if (error) {
         const errorMsg = await error?.context?.text();
         console.error('Send reminder error:', errorMsg || error?.message);
-        
+
         // Show more specific error message
         if (errorMsg && errorMsg.includes('AFRICASTALKING')) {
           toast.error('Africa\'s Talking API credentials not configured. Please check the setup guide above.');
@@ -94,8 +129,9 @@ export default function SchedulesPage() {
         }
       } else {
         toast.success('Reminder sent successfully!');
-        // Reload schedules to update any status
+        // Reload schedules and logs to update status
         loadSchedules();
+        loadLogs();
       }
     } catch (error) {
       console.error('Failed to send reminder:', error);
@@ -217,23 +253,23 @@ export default function SchedulesPage() {
                       {schedule.description}
                     </p>
                   )}
-                  
+
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span>{schedule.time_of_day}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="capitalize">{schedule.frequency}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {getChannelIcon(schedule.channel)}
                       <span className="capitalize">{schedule.channel}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4 text-muted-foreground" />
                       <span className="capitalize">{schedule.language}</span>
@@ -258,8 +294,8 @@ export default function SchedulesPage() {
                   <div className="pt-2">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           disabled={sendingReminder === schedule.id}
                         >
@@ -293,6 +329,52 @@ export default function SchedulesPage() {
             ))}
           </div>
         )}
+        {/* Recent Activity */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold tracking-tight">Recent Activity</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/logs">View All Logs</Link>
+            </Button>
+          </div>
+
+          {loadingLogs ? (
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full bg-muted" />
+              <Skeleton className="h-12 w-full bg-muted" />
+            </div>
+          ) : logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">No recent activity found.</p>
+          ) : (
+            <div className="grid gap-3">
+              {logs.map((log) => (
+                <Card key={log.id} className="bg-muted/30">
+                  <CardContent className="p-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${log.status === 'sent' || log.status === 'delivered' || log.status === 'confirmed'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-destructive/10 text-destructive'
+                        }`}>
+                        {log.channel === 'voice' ? <Phone className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {log.status === 'sent' ? 'Sent' : log.status === 'failed' ? 'Failed' : 'Reminder'} to {log.elderly?.full_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.sent_at ? format(new Date(log.sent_at), 'HH:mm:ss') : 'Just now'} - {log.message?.substring(0, 40)}...
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={log.status === 'failed' ? 'destructive' : 'default'} className="capitalize">
+                      {log.status}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
