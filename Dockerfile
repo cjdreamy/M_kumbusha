@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* package-lock.json* ./
 
 # Install dependencies
-RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
+RUN if [ -f pnpm-lock.yaml ]; then pnpm install; \
     else npm install; \
     fi
 
