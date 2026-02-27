@@ -134,53 +134,6 @@ export default function SchedulesPage() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        {/* Setup Warning Banner */}
-        <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-          <CardHeader>
-            <CardTitle className="text-amber-900 dark:text-amber-100 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              SMS/Voice Setup Required
-            </CardTitle>
-            <CardDescription className="text-amber-800 dark:text-amber-200">
-              To send SMS and voice reminders, you need to configure your Africa's Talking API credentials.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-sm text-amber-900 dark:text-amber-100">
-              <p className="font-medium mb-2">Quick Setup Steps:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Sign up at <a href="https://africastalking.com/" target="_blank" rel="noopener noreferrer" className="underline font-medium">africastalking.com</a> (free sandbox available)</li>
-                <li>Get your API Key and Username from the dashboard</li>
-                <li>Enter credentials in the Supabase secrets configuration panel</li>
-                <li>For sandbox: Register test phone numbers in Africa's Talking dashboard</li>
-                <li>Test with "Send Now" button below</li>
-              </ol>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                asChild
-                className="bg-white dark:bg-gray-900"
-              >
-                <a href="https://africastalking.com/" target="_blank" rel="noopener noreferrer">
-                  Sign Up for Africa's Talking
-                </a>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                asChild
-                className="bg-white dark:bg-gray-900"
-              >
-                <a href="/SMS_SETUP_GUIDE.md" target="_blank" rel="noopener noreferrer">
-                  View Setup Guide
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
